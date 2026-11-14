@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan Builder</title>
+<meta name="theme-color" content="#472136">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Plan Builder">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  :root{
+    --ink:#472136; --berry:#b8446e; --berry-deep:#9a3159; --blush:#faf1ee;
+    --paper:#fffaf7; --line:#eddad4; --stone:#a08b8c; --gold:#e5a83c;
+    --body:#5c4450; --wash:#f7e4ea; --ok:#2f7d5a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  [hidden]{display:none !important;}
+  body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--blush);color:var(--ink);line-height:1.5;font-size:16px;}
+  button{font-family:inherit;cursor:pointer;}
+  input,select{font-family:inherit;font-size:15px;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);width:100%;}
+  input:focus,select:focus{outline:2px solid var(--berry);border-color:var(--berry);}
+  .wrap{max-width:860px;margin:0 auto;padding:18px 16px 90px;}
+  .brandbar{background:var(--ink);color:var(--blush);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;}
+  .brandbar .bm{font-weight:800;letter-spacing:.14em;font-size:11px;color:var(--gold);}
+  .brandbar .cn{font-weight:700;font-size:15px;}
+  h1{font-size:1.5rem;}
+  h2{font-size:1.2rem;margin-bottom:10px;}
+  .btn{background:var(--berry);color:#fff;border:2px solid var(--ink);border-radius:100px;padding:12px 24px;font-weight:800;font-size:15px;box-shadow:2px 2px 0 var(--ink);}
+  .btn:active{transform:translate(2px,2px);box-shadow:none;}
+  .btn.ghost{background:var(--paper);color:var(--berry);}
+  .btn.small{padding:7px 14px;font-size:13px;box-shadow:1px 1px 0 var(--ink);}
+  .btn.danger{background:#fff;color:#b03030;border-color:#b03030;}
+  .card{background:var(--paper);border:1.5px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;}
+  .muted{color:var(--stone);font-size:13px;}
+  .tabs{position:fixed;bottom:0;left:0;right:0;background:var(--paper);border-top:2px solid var(--ink);display:flex;z-index:40;}
+  .tabs button{flex:1;padding:12px 4px 14px;background:none;border:none;font-weight:800;font-size:12.5px;color:var(--stone);letter-spacing:.03em;}
+  .tabs button.on{color:var(--berry);border-top:3px solid var(--berry);margin-top:-2px;}
+  /* wizard */
+  .wiz-step{display:none;}
+  .wiz-step.on{display:block;}
+  .wiz-dots{display:flex;gap:8px;justify-content:center;margin:14px 0 20px;}
+  .wiz-dots span{width:10px;height:10px;border-radius:50%;background:var(--line);}
+  .wiz-dots span.on{background:var(--berry);}
+  .pill-list{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;}
+  .pill{background:var(--wash);border:1.5px solid var(--berry);border-radius:100px;padding:6px 14px;font-weight:700;font-size:14px;display:flex;gap:8px;align-items:center;}
+  .pill b{cursor:pointer;color:var(--berry);}
+  .addrow{display:flex;gap:8px;margin-top:8px;}
+  .addrow input{flex:1;}
+  /* catalog editor */
+  .cat-block{margin-bottom:14px;}
+  .cat-block h3{font-size:14px;letter-spacing:.04em;color:var(--berry);margin-bottom:6px;font-weight:800;}
+  .item-row{display:flex;gap:8px;align-items:center;margin-bottom:6px;}
+  .item-row input.nm{flex:1;}
+  .item-row input.pr{width:110px;}
+  .item-row .rm{background:none;border:none;color:var(--stone);font-size:18px;font-weight:700;padding:0 6px;}
+  /* build */
+  .frow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .frow>div{flex:1;min-width:140px;}
+  .lbl{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--stone);margin-bottom:4px;display:block;}
+  .tiles{display:flex;flex-wrap:wrap;gap:8px;}
+  .tile{cursor:pointer;user-select:none;background:var(--paper);border:2px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13.5px;font-weight:700;color:var(--body);text-align:left;min-width:calc(50% - 4px);flex:1;}
+  .tile .pz{display:block;font-weight:800;color:var(--berry);font-size:13px;}
+  .tile.sel{border-color:var(--berry);background:var(--wash);color:var(--ink);box-shadow:2px 2px 0 rgba(184,68,110,.35);}
+  .tile .qty{display:none;margin-top:6px;gap:10px;align-items:center;}
+  .tile.sel .qty{display:flex;}
+  .qty button{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--ink);background:var(--paper);font-weight:800;font-size:15px;}
+  .qty span{font-weight:800;min-width:34px;text-align:center;}
+  .totalbar{position:sticky;top:0;z-index:30;background:var(--ink);color:var(--blush);border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .totalbar .tv{font-size:1.35rem;font-weight:800;color:var(--gold);}
+  .totalbar .tm{font-size:13px;color:#d9c3ce;}
+  .tierchip{background:var(--gold);color:var(--ink);font-weight:800;font-size:12px;border-radius:100px;padding:4px 12px;border:1.5px solid var(--ink);}
+  /* log */
+  table{border-collapse:collapse;width:100%;}
+  th{font-size:11px;letter-spacing:.06em;color:var(--stone);text-align:left;padding:6px;border-bottom:2px solid var(--ink);}
+  td{padding:9px 6px;border-bottom:1px solid var(--line);font-size:14px;color:var(--body);}
+  td .btn.small{box-shadow:none;}
+  /* board */
+  .board-row{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line);}
+  .board-row .nm{font-weight:800;}
+  .board-row .st{color:var(--berry);font-weight:800;}
+  /* sheet overlay */
+  #sheetOverlay{position:fixed;inset:0;background:rgba(71,33,54,.55);z-index:60;overflow:auto;padding:20px 10px;}
+  .sheet{background:#fff;max-width:720px;margin:0 auto;border-radius:8px;padding:34px 36px;color:#2c2230;}
+  .sheet .sh-band{border-bottom:3px solid var(--berry);padding-bottom:12px;margin-bottom:16px;}
+  .sheet .sh-clinic{font-size:12px;letter-spacing:.2em;font-weight:800;color:var(--berry);}
+  .sheet h2{font-size:1.5rem;margin:4px 0 0;}
+  .sheet .sh-meta{display:flex;gap:20px;flex-wrap:wrap;font-size:13px;color:#6e5a66;margin:10px 0 16px;}
+  .sheet .sh-meta b{color:#2c2230;}
+  .sheet h3{font-size:1rem;color:var(--berry);margin:16px 0 6px;}
+  .sheet table td,.sheet table th{font-size:13px;}
+  .sheet .why{font-size:13px;color:#574753;margin-bottom:6px;}
+  .sheet .sh-total{display:flex;justify-content:space-between;font-weight:800;font-size:16px;border-top:2px solid var(--ink);padding-top:10px;margin-top:10px;}
+  .sheet .sh-month{text-align:right;color:var(--berry);font-weight:800;font-size:14px;margin-top:4px;}
+  .sheet .sh-foot{margin-top:22px;border-top:1px solid var(--line);padding-top:12px;font-size:12px;color:#8a7482;font-style:italic;text-align:center;}
+  .sheet-actions{max-width:720px;margin:12px auto 0;display:flex;gap:10px;justify-content:center;}
+  .notice{background:#fbf0da;border:1.5px solid var(--gold);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--body);margin-bottom:14px;}
+  .install{background:#fff;border:2px solid var(--berry);border-radius:14px;padding:16px 18px;margin:0 0 16px;position:relative;}
+  .install h3{font-size:1.05rem;margin-bottom:6px;}
+  .install ol{margin:8px 0 0 20px;font-size:15px;color:var(--body);}
+  .install li{margin-bottom:4px;}
+  .install .x{position:absolute;top:8px;right:10px;background:none;border:none;font-size:22px;font-weight:700;color:var(--stone);}
+  .hint{background:var(--wash);border:1.5px dashed var(--berry);border-radius:12px;padding:12px 16px;font-size:14.5px;color:var(--ink);margin-bottom:14px;}
+  .hint b{color:var(--berry);}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:var(--ink);color:var(--blush);padding:10px 22px;border-radius:100px;font-weight:700;font-size:14px;z-index:70;}
+  @media print{
+    body *{visibility:hidden;}
+    #sheetOverlay{position:static;background:none;padding:0;overflow:visible;}
+    #sheetOverlay, #sheetOverlay .sheet, #sheetOverlay .sheet *{visibility:visible;}
+    .sheet{box-shadow:none;border-radius:0;max-width:none;}
+    .sheet-actions{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="brandbar">
+  <span class="bm">THE MEDSPA SUCCESS STACK · PLAN BUILDER APP</span>
+  <span class="cn" id="clinicNameBar"></span>
+</div>
+
+<div class="wrap" id="app"></div>
+
+<div class="tabs" id="tabs" hidden>
+  <button data-v="build">BUILD A PLAN</button>
+  <button data-v="log">PLAN LOG</button>
+  <button data-v="board">SCOREBOARD</button>
+  <button data-v="settings">SETTINGS</button>
+</div>
+
+<div id="sheetOverlay" hidden></div>
+
+<script>
+/* ============ The Medspa Success Stack · Plan Builder App ============ */
+var STARTER = [
+  {cat:"Collagen Stimulation", items:[
+    {name:"Microneedling series", price:1125},
+    {name:"RF microneedling — resurface series", price:2850},
+    {name:"RF microneedling — face + neck series", price:3750},
+    {name:"Eye-area add-on", price:900}]},
+  {cat:"Skin Hydration", items:[
+    {name:"Signature hydrating facial series", price:540},
+    {name:"Deluxe hydradermabrasion series", price:750},
+    {name:"Platinum hydradermabrasion series", price:900}]},
+  {cat:"Biostimulator / Injectable", items:[
+    {name:"Biostimulator — 1 treatment", price:750},
+    {name:"Biostimulator — 2 treatments", price:1500},
+    {name:"Collagen-gel filler — 2 treatments", price:1500},
+    {name:"Neurotoxin — full face", price:450}]},
+  {cat:"Pigmentation / Redness", items:[
+    {name:"IPL photofacial — series of 2", price:600},
+    {name:"IPL photofacial — series of 3", price:900},
+    {name:"IPL — face + neck + chest series", price:1950}]},
+  {cat:"Chemical Peel", items:[
+    {name:"1 peel", price:350},
+    {name:"2 peels", price:750},
+    {name:"3 peels", price:1050}]}
+];
+var WHY = {
+  "Collagen Stimulation":"Rebuilds the skin's structure from within — this is where lasting change comes from.",
+  "Skin Hydration":"Keeps skin healthy and glowing between active treatments, and locks in your results.",
+  "Biostimulator / Injectable":"Softens lines and restores volume while your plan builds collagen underneath.",
+  "Pigmentation / Redness":"Evens tone and clears sun damage so your new skin looks as good as it feels.",
+  "Chemical Peel":"Clears the surface and preps your skin so every other treatment works better."
+};
+var CONCERNS = ["Anti-aging","Pigmentation / sun damage","Texture / scarring","Acne","Overall glow"];
+
+var state = null;
+function fresh(){ return {clinic:"", providers:[], catalog:JSON.parse(JSON.stringify(STARTER)), plans:[], setup:false}; }
+function load(){ try{ var s = localStorage.getItem("msstack_pb"); state = s ? JSON.parse(s) : fresh(); }catch(e){ state = fresh(); } }
+function save(){ try{ localStorage.setItem("msstack_pb", JSON.stringify(state)); }catch(e){} }
+function money(n){ return "$" + Math.round(n).toLocaleString("en-US"); }
+function tierOf(t){ if(t>=8000) return "Tier 3"; if(t>=4500) return "Tier 2"; if(t>=2500) return "Tier 1"; return "Below Tier 1"; }
+function toast(msg){ document.querySelectorAll(".toast").forEach(function(o){o.remove();}); var t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t); setTimeout(function(){t.remove();},2200); }
+function esc(s){ var d=document.createElement("div"); d.textContent=s==null?"":String(s); return d.innerHTML; }
+
+/* ---------- Access code (buyers only) ---------- */
+var ACCESS_HASH = "b9f372b9df9155c08c4f5c444fd2a955";
+function hcode(s){ s=String(s).toUpperCase().replace(/[^A-Z0-9]/g,""); var h=2166136261>>>0, out=""; for(var r=0;r<4;r++){ for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i)+r*31; h=Math.imul(h,16777619)>>>0; } out+=("00000000"+h.toString(16)).slice(-8); } return out; }
+function unlocked(){ try{ return localStorage.getItem("msstack_pb_key") === ACCESS_HASH; }catch(e){ return false; } }
+function renderLock(){
+  document.getElementById("tabs").hidden = true;
+  document.getElementById("app").innerHTML =
+    '<div style="max-width:440px;margin:40px auto 0;text-align:center;">'
+    +'<h1>Welcome to your Plan Builder</h1>'
+    +'<p class="muted" style="margin:6px 0 20px;font-size:15px;">Enter the access code from your purchase email. You only need to do this once on each device.</p>'
+    +'<div class="card" style="text-align:left;"><label class="lbl">ACCESS CODE</label>'
+    +'<input id="accessCode" autocapitalize="characters" autocomplete="off" placeholder="e.g. ABCD1234" onkeydown="if(event.key===\'Enter\')tryUnlock()">'
+    +'<div style="margin-top:14px;text-align:right;"><button class="btn" onclick="tryUnlock()">Unlock →</button></div></div>'
+    +'<p class="muted">Can’t find your code? Email <b>support@getskinreps.com</b> and we’ll resend it.</p></div>';
+  setTimeout(function(){ var i=document.getElementById("accessCode"); if(i) i.focus(); }, 50);
+}
+function tryUnlock(){
+  var v = document.getElementById("accessCode").value;
+  if(hcode(v) === ACCESS_HASH){ try{ localStorage.setItem("msstack_pb_key", ACCESS_HASH); }catch(e){} toast("Unlocked ✓"); boot(); }
+  else { toast("That code didn’t work — check your purchase email"); }
+}
+
+/* ---------- Home-screen install help ---------- */
+var deferredPrompt = null;
+window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); deferredPrompt = e; });
+function isStandalone(){ return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true; }
+function deviceKind(){
+  var ua = navigator.userAgent || "";
+  var iOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if(iOS) return "ios";
+  if(/Android/.test(ua)) return "android";
+  return "desktop";
+}
+function installSteps(){
+  var k = deviceKind();
+  if(k === "ios") return '<ol><li>Tap the <b>Share</b> button (the square with the arrow pointing up) at the top or bottom of Safari.</li><li>Scroll down and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>. Open Plan Builder from that icon from now on.</li></ol>';
+  if(k === "android") return '<ol><li>Tap the <b>⋮</b> menu in the top corner of Chrome.</li><li>Tap <b>Add to Home screen</b> (or <b>Install app</b>).</li><li>Open Plan Builder from that icon from now on.</li></ol>';
+  return '<ol><li>Bookmark this page so it’s one click away.</li><li>Always open it in this same browser on this computer — that’s where your clinic’s info is saved.</li></ol>';
+}
+function installBanner(){
+  if(isStandalone()) return "";
+  try{ if(localStorage.getItem("msstack_pb_hideinstall")) return ""; }catch(e){}
+  var btn = deferredPrompt ? '<div style="margin-top:10px;"><button class="btn small" onclick="doInstall()">Add to my home screen</button></div>' : "";
+  var title = deviceKind()==="desktop" ? "Quick tip before you start" : "Put Plan Builder on your home screen (30 seconds)";
+  return '<div class="install"><button class="x" onclick="hideInstall()" aria-label="Close">×</button><h3>'+title+'</h3>'
+    +'<p class="muted" style="font-size:14px;">It opens full-screen like a regular app, and your clinic’s info stays saved.</p>'
+    + installSteps() + btn + '</div>';
+}
+function hideInstall(){ try{ localStorage.setItem("msstack_pb_hideinstall","1"); }catch(e){} var b=document.querySelector(".install"); if(b) b.remove(); }
+function doInstall(){ if(!deferredPrompt) return; deferredPrompt.prompt(); deferredPrompt = null; }
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+
+var app = document.getElementById("app");
+var tabs = document.getElementById("tabs");
+var view = "build";
+var draft = null;
+function freshDraft(){ return {client:"", provider:"", concern:CONCERNS[0], months:12, sel:{}}; }
+
+/* ---------- Wizard ---------- */
+var wizStep = 0;
+function renderWizard(){
+  tabs.hidden = true;
+  var cat = state.catalog;
+  var html = (wizStep===0 ? installBanner() : '') + '<div style="text-align:center;margin:16px 0;"><h1>Welcome to your Plan Builder</h1>'
+    +'<p class="muted" style="margin-top:4px;">Three quick steps and this becomes YOUR clinic’s tool. You can change everything later in Settings.</p></div>'
+    +'<div class="wiz-dots">'+[0,1,2].map(function(i){return '<span class="'+(i===wizStep?'on':'')+'"></span>';}).join('')+'</div>';
+
+  if(wizStep===0){
+    html += '<div class="card"><h2>1 · Your clinic</h2>'
+      +'<label class="lbl">CLINIC NAME (appears on every client sheet)</label>'
+      +'<input id="wClinic" placeholder="e.g. Radiance Aesthetics" value="'+esc(state.clinic)+'" onkeydown="if(event.key===\'Enter\')wizNext()">'
+      +'<div style="margin-top:16px;text-align:right;"><button class="btn" onclick="wizNext()">Next →</button></div></div>';
+  } else if(wizStep===1){
+    html += '<div class="card"><h2>2 · Your providers</h2><p class="muted">Type each person who builds plans, then tap <b>Add</b>. Just you? Add your own name.</p>'
+      +'<div class="pill-list">'+state.providers.map(function(p,i){return '<span class="pill">'+esc(p)+'<b onclick="rmProv('+i+')">×</b></span>';}).join('')+'</div>'
+      +'<div class="addrow"><input id="wProv" placeholder="Provider first name" onkeydown="if(event.key===\'Enter\')addProv()"><button class="btn small" onclick="addProv()">Add</button></div>'
+      +'<div style="margin-top:16px;display:flex;justify-content:space-between;"><button class="btn ghost" onclick="wizBack()">← Back</button><button class="btn" onclick="wizNext()">Next →</button></div></div>';
+  } else {
+    html += '<div class="card"><h2>3 · Your treatment menu</h2>'
+      +'<p class="muted" style="margin-bottom:10px;">We pre-loaded the 5-category starter menu from your Plan Builder Quick Reference. Edit the names and prices to match YOUR menu — add or remove anything.</p>'
+      + catalogEditor()
+      +'<div style="margin-top:16px;display:flex;justify-content:space-between;"><button class="btn ghost" onclick="wizBack()">← Back</button><button class="btn" onclick="finishWizard()">Finish setup ✓</button></div></div>';
+  }
+  app.innerHTML = html;
+}
+function wizNext(){
+  if(wizStep===0){ var v=document.getElementById("wClinic").value.trim(); if(!v){ toast("Give your clinic a name"); return;} state.clinic=v; save(); }
+  if(wizStep===1){
+    var pv=document.getElementById("wProv"); var typed=pv?pv.value.trim():"";
+    if(typed){ state.providers.push(typed); save(); }
+    if(!state.providers.length){ toast("Add at least one provider (your own name works)"); return; }
+  }
+  wizStep++; renderWizard();
+}
+function wizBack(){ if(wizStep===2) readCatalogEditor(); wizStep--; renderWizard(); }
+function addProv(){ var el=document.getElementById("wProv")||document.getElementById("sProv"); var v=el.value.trim(); if(!v) return; state.providers.push(v); save(); el.value=""; (state.setup?renderSettings:renderWizard)(); }
+function rmProv(i){ state.providers.splice(i,1); save(); (state.setup?renderSettings:renderWizard)(); }
+function finishWizard(){
+  readCatalogEditor();
+  if(!state.providers.length){ toast("Add at least one provider"); wizStep=1; renderWizard(); return; }
+  state.setup = true; save(); draft = freshDraft(); showView("build");
+  toast("You’re set up. Build your first plan ✨");
+}
+
+/* ---------- Catalog editor (shared wizard/settings) ---------- */
+function catalogEditor(){
+  return state.catalog.map(function(c,ci){
+    return '<div class="cat-block" data-ci="'+ci+'"><h3>'+esc(c.cat).toUpperCase()+'</h3>'
+      + c.items.map(function(it,ii){
+        return '<div class="item-row"><input class="nm" data-ci="'+ci+'" data-ii="'+ii+'" value="'+esc(it.name)+'">'
+          +'<input class="pr" type="number" data-ci="'+ci+'" data-ii="'+ii+'" value="'+it.price+'">'
+          +'<button class="rm" onclick="rmItem('+ci+','+ii+')">×</button></div>';
+      }).join('')
+      +'<button class="btn ghost small" onclick="addItem('+ci+')">+ Add treatment</button></div>';
+  }).join('');
+}
+function readCatalogEditor(){
+  document.querySelectorAll(".item-row .nm").forEach(function(inp){
+    state.catalog[inp.dataset.ci].items[inp.dataset.ii].name = inp.value.trim() || "Treatment";
+  });
+  document.querySelectorAll(".item-row .pr").forEach(function(inp){
+    state.catalog[inp.dataset.ci].items[inp.dataset.ii].price = Math.max(0, Number(inp.value)||0);
+  });
+  state.catalog.forEach(function(c){ c.items = c.items.filter(function(it){ return it.name !== "" ; }); });
+  save();
+}
+function addItem(ci){ readCatalogEditor(); state.catalog[ci].items.push({name:"New treatment", price:0}); save(); (state.setup?renderSettings:renderWizard)(); }
+function rmItem(ci,ii){ readCatalogEditor(); state.catalog[ci].items.splice(ii,1); save(); (state.setup?renderSettings:renderWizard)(); }
+
+/* ---------- Main views ---------- */
+function showView(v){
+  view = v; tabs.hidden = false;
+  document.getElementById("clinicNameBar").textContent = state.clinic;
+  tabs.querySelectorAll("button").forEach(function(b){ b.classList.toggle("on", b.dataset.v===view); });
+  if(v==="build") renderBuild();
+  if(v==="log") renderLog();
+  if(v==="board") renderBoard();
+  if(v==="settings") renderSettings();
+}
+tabs.addEventListener("click", function(e){ var b=e.target.closest("button"); if(b) showView(b.dataset.v); });
+
+/* ---------- Build ---------- */
+function draftTotal(){
+  var t=0; Object.keys(draft.sel).forEach(function(k){ var p=k.split("|"); var it=state.catalog[p[0]].items[p[1]]; if(it) t += it.price * draft.sel[k]; });
+  return t;
+}
+function renderBuild(){
+  if(!draft) draft = freshDraft();
+  var t = draftTotal();
+  var catCount = {}; Object.keys(draft.sel).forEach(function(k){ catCount[k.split("|")[0]] = 1; });
+  var pillars = Object.keys(catCount).length;
+  var html = '<div class="totalbar"><div><div class="tv">'+money(t)+'</div>'
+    +'<div class="tm">'+money(t/draft.months)+'/mo over '+draft.months+' months · '+pillars+' of 5 pillars</div></div>'
+    +'<span class="tierchip">'+tierOf(t)+'</span></div>';
+  if(!state.plans.length){
+    html = installBanner() + html + '<div class="hint"><b>How it works:</b> tap the treatments you’re recommending (tap <b>+</b> for more sessions). The total and monthly price update as you go. Then tap <b>Preview client sheet</b> to print it, or <b>Save plan to log</b> to track it.</div>';
+  }
+  html += '<div class="card"><div class="frow">'
+    +'<div><label class="lbl">CLIENT (first name + last initial)</label><input id="bClient" value="'+esc(draft.client)+'" placeholder="e.g. Sarah K." onchange="draft.client=this.value"></div>'
+    +'<div><label class="lbl">PROVIDER</label><select id="bProv" onchange="draft.provider=this.value">'+state.providers.map(function(p){return '<option '+(p===draft.provider?'selected':'')+'>'+esc(p)+'</option>';}).join('')+'</select></div>'
+    +'</div><div class="frow">'
+    +'<div><label class="lbl">PRIMARY CONCERN</label><select onchange="draft.concern=this.value">'+CONCERNS.map(function(c){return '<option '+(c===draft.concern?'selected':'')+'>'+c+'</option>';}).join('')+'</select></div>'
+    +'<div><label class="lbl">PLAN LENGTH</label><select onchange="draft.months=Number(this.value);renderBuild()"><option value="6" '+(draft.months===6?'selected':'')+'>6 months</option><option value="12" '+(draft.months===12?'selected':'')+'>12 months</option></select></div>'
+    +'</div></div>';
+  state.catalog.forEach(function(c,ci){
+    html += '<div class="card"><h2 style="font-size:1rem;color:var(--berry);">'+esc(c.cat)+'</h2><div class="tiles">';
+    c.items.forEach(function(it,ii){
+      var k = ci+"|"+ii, q = draft.sel[k]||0;
+      html += '<div class="tile '+(q?'sel':'')+'" onclick="tapTile(event,\''+k+'\')">'+esc(it.name)
+        +'<span class="pz">'+money(it.price)+'</span>'
+        +'<span class="qty"><button onclick="bump(event,\''+k+'\',-1)">−</button><span>×'+q+'</span><button onclick="bump(event,\''+k+'\',1)">+</button></span></div>';
+    });
+    html += '</div></div>';
+  });
+  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px;">'
+    +'<button class="btn ghost" onclick="previewSheet()">Preview client sheet</button>'
+    +'<button class="btn" onclick="savePlan()">Save plan to log</button></div>'
+    +'<p class="muted" style="text-align:center;margin-top:12px;">Use first name + last initial only — keep medical details in your EMR, not here.</p>';
+  app.innerHTML = html;
+  if(draft.provider==="" && state.providers.length) draft.provider = state.providers[0];
+}
+function tapTile(e,k){ if(e.target.closest(".qty")) return; draft.sel[k] = draft.sel[k] ? 0 : 1; if(!draft.sel[k]) delete draft.sel[k]; renderBuild(); }
+function bump(e,k,d){ e.stopPropagation(); draft.sel[k]=Math.max(0,(draft.sel[k]||0)+d); if(!draft.sel[k]) delete draft.sel[k]; renderBuild(); }
+function planItems(){
+  var rows=[]; state.catalog.forEach(function(c,ci){ c.items.forEach(function(it,ii){ var q=draft.sel[ci+"|"+ii]; if(q) rows.push({cat:c.cat,name:it.name,qty:q,price:it.price*q}); }); });
+  return rows;
+}
+function savePlan(){
+  var t = draftTotal();
+  if(!t){ toast("Tap some treatments first"); return; }
+  if(!draft.client.trim()){ toast("Add the client’s name"); return; }
+  state.plans.unshift({ts:Date.now(), client:draft.client.trim(), provider:draft.provider, concern:draft.concern, months:draft.months, items:planItems(), total:t, tier:tierOf(t)});
+  save(); draft = freshDraft(); showView("log"); toast("Plan saved ✓");
+}
+
+/* ---------- Client sheet ---------- */
+function previewSheet(){
+  var t = draftTotal(); if(!t){ toast("Tap some treatments first"); return; }
+  var items = planItems(); var cats = [];
+  items.forEach(function(r){ if(cats.indexOf(r.cat)<0) cats.push(r.cat); });
+  var o = document.getElementById("sheetOverlay");
+  var html = '<div class="sheet"><div class="sh-band"><div class="sh-clinic">'+esc(state.clinic).toUpperCase()+'</div>'
+    +'<h2>Your Personalized Skin Plan</h2></div>'
+    +'<div class="sh-meta"><span>PREPARED FOR <b>'+esc(draft.client||"—")+'</b></span><span>PROVIDER <b>'+esc(draft.provider)+'</b></span><span>DATE <b>'+new Date().toLocaleDateString()+'</b></span><span>PLAN LENGTH <b>'+draft.months+' months</b></span></div>'
+    +'<h3>Why we built this plan for you</h3>'
+    + cats.map(function(c){ return '<p class="why"><b>'+esc(c)+':</b> '+ (WHY[c]||"A key pillar of your result.") +'</p>'; }).join('')
+    +'<h3>Your treatments</h3><table><tr><th>Treatment</th><th style="width:40px;">Qty</th><th style="width:90px;text-align:right;">Investment</th></tr>'
+    + items.map(function(r){ return '<tr><td>'+esc(r.name)+'</td><td>×'+r.qty+'</td><td style="text-align:right;">'+money(r.price)+'</td></tr>'; }).join('')
+    +'</table><div class="sh-total"><span>Your plan total</span><span>'+money(t)+'</span></div>'
+    +'<div class="sh-month">≈ '+money(t/draft.months)+'/month over '+draft.months+' months</div>'
+    +'<div class="sh-foot">Great skin isn’t bought. It’s built — one step at a time. · '+esc(state.clinic)+'</div></div>'
+    +'<div class="sheet-actions"><button class="btn ghost" onclick="closeSheet()">Close</button><button class="btn" onclick="window.print()">Print / Save PDF</button></div>';
+  o.innerHTML = html; o.hidden = false;
+}
+function closeSheet(){ document.getElementById("sheetOverlay").hidden = true; }
+
+/* ---------- Log ---------- */
+var confirmDel = -1;
+function renderLog(){
+  var html = '<h1 style="margin-bottom:10px;">Plan Log</h1>';
+  if(!state.plans.length){ html += '<div class="card"><p class="muted">No plans yet. Build your first one — it lands here.</p></div>'; }
+  else {
+    html += '<div class="card" style="overflow-x:auto;"><table><tr><th>Date</th><th>Client</th><th>Provider</th><th>Tier</th><th style="text-align:right;">Total</th><th></th></tr>'
+      + state.plans.map(function(p,i){
+        var del = (confirmDel===i) ? '<button class="btn small danger" onclick="delPlan('+i+')">Sure?</button>' : '<button class="btn small ghost" onclick="askDel('+i+')">×</button>';
+        return '<tr><td>'+new Date(p.ts).toLocaleDateString()+'</td><td>'+esc(p.client)+'</td><td>'+esc(p.provider)+'</td><td>'+p.tier+'</td><td style="text-align:right;font-weight:700;">'+money(p.total)+'</td><td>'+del+'</td></tr>';
+      }).join('') + '</table></div>';
+    var sum = state.plans.reduce(function(a,p){return a+p.total;},0);
+    html += '<p class="muted" style="text-align:right;">'+state.plans.length+' plans · '+money(sum)+' total</p>';
+  }
+  app.innerHTML = html;
+}
+function askDel(i){ confirmDel = i; renderLog(); setTimeout(function(){ if(confirmDel===i){confirmDel=-1; if(view==="log")renderLog();} }, 2500); }
+function delPlan(i){ state.plans.splice(i,1); confirmDel=-1; save(); renderLog(); }
+
+/* ---------- Board ---------- */
+function renderBoard(){
+  var now = new Date(); var m = now.getMonth(), y = now.getFullYear();
+  var per = {};
+  state.providers.forEach(function(p){ per[p]={n:0,t:0}; });
+  state.plans.forEach(function(p){ var d=new Date(p.ts); if(d.getMonth()===m && d.getFullYear()===y){ if(!per[p.provider]) per[p.provider]={n:0,t:0}; per[p.provider].n++; per[p.provider].t+=p.total; } });
+  var html = '<h1 style="margin-bottom:4px;">Scoreboard</h1><p class="muted" style="margin-bottom:12px;">'+now.toLocaleString("en-US",{month:"long",year:"numeric"})+' · plans built this month</p><div class="card">';
+  var names = Object.keys(per);
+  names.sort(function(a,b){ return per[b].t-per[a].t; });
+  html += names.map(function(p){ return '<div class="board-row"><span class="nm">'+esc(p)+'</span><span>'+per[p].n+' plan'+(per[p].n===1?'':'s')+'</span><span class="st">'+money(per[p].t)+'</span></div>'; }).join('');
+  html += '</div><p class="muted">Every patient deserves a mapped-out plan. The scoreboard isn’t pressure — it’s a habit tracker.</p>';
+  app.innerHTML = html;
+}
+
+/* ---------- Settings ---------- */
+function renderSettings(){
+  var html = '<h1 style="margin-bottom:10px;">Settings</h1>'
+    +'<div class="card"><label class="lbl">CLINIC NAME</label><input value="'+esc(state.clinic)+'" onchange="state.clinic=this.value.trim();save();showView(\'settings\')"></div>'
+    +'<div class="card"><h2>Providers</h2><div class="pill-list">'+state.providers.map(function(p,i){return '<span class="pill">'+esc(p)+'<b onclick="rmProv('+i+')">×</b></span>';}).join('')+'</div>'
+    +'<div class="addrow"><input id="sProv" placeholder="Provider first name" onkeydown="if(event.key===\'Enter\')addProv()"><button class="btn small" onclick="addProv()">Add</button></div></div>'
+    +'<div class="card"><h2>Treatment menu &amp; pricing</h2>'+catalogEditor()
+    +'<div style="margin-top:10px;text-align:right;"><button class="btn small" onclick="readCatalogEditor();toast(\'Menu saved ✓\')">Save menu changes</button></div></div>'
+    +'<div class="card"><h2>Backup</h2><p class="muted" style="margin-bottom:10px;">Your data lives in this browser only. Export a backup regularly — and import it to move to another device.</p>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap;"><button class="btn ghost small" onclick="exportData()">Export backup</button>'
+    +'<button class="btn ghost small" onclick="document.getElementById(\'impFile\').click()">Import backup</button>'
+    +'<input type="file" id="impFile" accept=".json" style="display:none" onchange="importData(this)"></div></div>'
+    +'<div class="card"><h2>Use it on another device</h2><p class="muted" style="margin-bottom:6px;">Open the same Plan Builder link on that device and add it to the home screen:</p>'+installSteps()
+    +'<p class="muted" style="margin-top:8px;">To copy your menu and providers over, tap <b>Export backup</b> here, then <b>Import backup</b> on the new device.</p></div>'
+    +'<div class="notice">This tool plans treatment investments. Log clients as first name + last initial, and keep all medical information in your EMR.</div>';
+  app.innerHTML = html;
+}
+function exportData(){
+  try{
+    var blob = new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = "plan-builder-backup-" + new Date().toISOString().slice(0,10) + ".json";
+    a.click(); URL.revokeObjectURL(a.href);
+  }catch(e){ toast("Export failed in this browser"); }
+}
+function importData(inp){
+  var f = inp.files[0]; if(!f) return;
+  var r = new FileReader();
+  r.onload = function(){ try{ var d = JSON.parse(r.result); if(d && d.catalog && d.plans){ state = d; save(); showView("settings"); toast("Backup imported ✓"); } else toast("That file isn’t a Plan Builder backup"); }catch(e){ toast("Couldn’t read that file"); } };
+  r.readAsText(f);
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  if(!unlocked()){ renderLock(); return; }
+  load();
+  if(state.setup){ draft = freshDraft(); showView("build"); } else { renderWizard(); }
+}
+boot();
+</script>
+</body>
+</html>
