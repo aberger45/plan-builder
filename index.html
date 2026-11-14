@@ -106,7 +106,15 @@
   .install .x{position:absolute;top:8px;right:10px;background:none;border:none;font-size:22px;font-weight:700;color:var(--stone);}
   .hint{background:var(--wash);border:1.5px dashed var(--berry);border-radius:12px;padding:12px 16px;font-size:14.5px;color:var(--ink);margin-bottom:14px;}
   .hint b{color:var(--berry);}
+  .dl{display:flex;align-items:center;gap:14px;padding:14px 4px;border-bottom:1px solid var(--line);}
+  .dl:last-child{border-bottom:none;}
+  .dl .num{flex:0 0 34px;height:34px;border-radius:50%;background:var(--wash);color:var(--berry);font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .dl .txt{flex:1;}
+  .dl .txt b{display:block;color:var(--ink);font-size:15px;}
+  .dl .txt span{color:var(--stone);font-size:13px;}
+  .dl a.btn{text-decoration:none;white-space:nowrap;}
   .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:70px;background:var(--ink);color:var(--blush);padding:10px 22px;border-radius:100px;font-weight:700;font-size:14px;z-index:70;}
+  @media (max-width:520px){ .tabs button{font-size:10.5px;letter-spacing:0;padding:12px 2px 14px;} }
   @media print{
     body *{visibility:hidden;}
     #sheetOverlay{position:static;background:none;padding:0;overflow:visible;}
@@ -126,6 +134,7 @@
 <div class="wrap" id="app"></div>
 
 <div class="tabs" id="tabs" hidden>
+  <button data-v="templates">TEMPLATES</button>
   <button data-v="build">BUILD A PLAN</button>
   <button data-v="log">PLAN LOG</button>
   <button data-v="board">SCOREBOARD</button>
@@ -249,7 +258,8 @@ function renderWizard(){
     html += '<div class="card"><h2>1 · Your clinic</h2>'
       +'<label class="lbl">CLINIC NAME (appears on every client sheet)</label>'
       +'<input id="wClinic" placeholder="e.g. Radiance Aesthetics" value="'+esc(state.clinic)+'" onkeydown="if(event.key===\'Enter\')wizNext()">'
-      +'<div style="margin-top:16px;text-align:right;"><button class="btn" onclick="wizNext()">Next →</button></div></div>';
+      +'<div style="margin-top:16px;text-align:right;"><button class="btn" onclick="wizNext()">Next →</button></div></div>'
+      +'<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;"><span><b>Looking for your 10 templates?</b><br><span class="muted">Download them anytime, before or after setup.</span></span><button class="btn ghost" onclick="renderTemplates()">Go to templates</button></div>';
   } else if(wizStep===1){
     html += '<div class="card"><h2>2 · Your providers</h2><p class="muted">Type each person who builds plans, then tap <b>Add</b>. Just you? Add your own name.</p>'
       +'<div class="pill-list">'+state.providers.map(function(p,i){return '<span class="pill">'+esc(p)+'<b onclick="rmProv('+i+')">×</b></span>';}).join('')+'</div>'
@@ -307,6 +317,36 @@ function readCatalogEditor(){
 function addItem(ci){ readCatalogEditor(); state.catalog[ci].items.push({name:"New treatment", price:0}); save(); (state.setup?renderSettings:renderWizard)(); }
 function rmItem(ci,ii){ readCatalogEditor(); state.catalog[ci].items.splice(ii,1); save(); (state.setup?renderSettings:renderWizard)(); }
 
+
+/* ---------- Templates ---------- */
+var DOCS = [
+  ["01","Start Here Roadmap","Open this first. Pick your situation and see which document to use this week.","01_Start_Here_Roadmap.pdf"],
+  ["02","The Event Playbook","The step-by-step system behind our $140K single event.","02_Event_Playbook.pdf"],
+  ["03","The Promo Launch Playbook","Turn monthly promos into launches, without discounting.","03_Promo_Launch_Playbook.pdf"],
+  ["04","The Skin Plan Library","Ready-made plans for the 7 most common skin concerns.","04_Skin_Plan_Library.pdf"],
+  ["05","Consultation Script","Word-for-word, from hello to booked plan. Printable.","05_Consultation_Script.pdf"],
+  ["06","Skin Plan Client Template","The plan sheet your client signs and walks out holding.","06_Skin_Plan_Client_Template.pdf"],
+  ["07","Plan Builder Quick Reference","One-page cheat sheet of the 5 plan categories.","07_Plan_Builder_Quick_Reference.pdf"],
+  ["08","Pricing Worksheet","Build your three pricing tiers.","08_Pricing_Worksheet.pdf"],
+  ["09","Staff Bonus Tracker","Run the tiered staff bonus system.","09_Staff_Bonus_Tracker.pdf"],
+  ["10","Staff Training Slides","Walk your team through the method in one meeting. Editable PowerPoint.","10_Staff_Training_Slides.pptx"]
+];
+var DOCS_FOLDER = "https://drive.google.com/drive/folders/1a-E-rTH6_5kOdUPqwDpG3rSMP_jrjMAR?usp=sharing";
+function renderTemplates(){
+  tabs.hidden = !state.setup;
+  if(state.setup){ tabs.querySelectorAll("button").forEach(function(b){ b.classList.toggle("on", b.dataset.v==="templates"); }); }
+  var html = '<h1 style="margin-bottom:4px;">Your templates</h1>'
+    +'<p class="muted" style="margin-bottom:14px;font-size:14px;">All 10 live in one folder. Open it, tap any document to view it, and use the download arrow to save it. Start with the Start Here Roadmap.</p>'
+    +'<div style="text-align:center;margin:0 0 16px;"><a class="btn" style="text-decoration:none;display:inline-block;" href="'+DOCS_FOLDER+'" target="_blank" rel="noopener">Open my 10 templates →</a></div>'
+    +'<div class="card"><p class="lbl" style="margin-bottom:6px;">WHAT’S INSIDE</p>' + DOCS.map(function(d){
+      return '<div class="dl"><div class="num">'+d[0]+'</div><div class="txt"><b>'+esc(d[1])+'</b><span>'+esc(d[2])+'</span></div></div>';
+    }).join('') + '</div>';
+  if(!state.setup){
+    html += '<div style="text-align:center;margin-top:10px;"><button class="btn" onclick="wizStep=0;renderWizard()">Set up my Plan Builder →</button></div>';
+  }
+  app.innerHTML = html;
+}
+
 /* ---------- Main views ---------- */
 function showView(v){
   view = v; tabs.hidden = false;
@@ -316,6 +356,7 @@ function showView(v){
   if(v==="log") renderLog();
   if(v==="board") renderBoard();
   if(v==="settings") renderSettings();
+  if(v==="templates") renderTemplates();
 }
 tabs.addEventListener("click", function(e){ var b=e.target.closest("button"); if(b) showView(b.dataset.v); });
 
